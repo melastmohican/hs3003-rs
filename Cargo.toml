@@ -1,0 +1,19 @@
+[package]
+name = "hs3003"
+version = "0.1.0"
+authors = ["Mariusz Jurgielewicz <mordor@mail.com>"]
+edition = "2021"
+rust-version = "1.62"
+description = "Platform-agnostic Rust driver for the Renesas HS3003 temperature and humidity sensor"
+documentation = "https://docs.rs/hs3003"
+repository = "https://github.com/melastmohican/hs3003-rs"
+readme = "README.md"
+keywords = ["embedded", "no-std", "sensor", "i2c", "embedded-hal"]
+categories = ["embedded", "hardware-support", "no-std"]
+license = "MIT OR Apache-2.0"
+
+[dependencies]
+embedded-hal = "1.0"
+
+[dev-dependencies]
+embedded-hal-mock = "0.11"
