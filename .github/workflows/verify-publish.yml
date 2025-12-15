@@ -1,0 +1,100 @@
+name: Verify publish readiness
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch: {}
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Cache Cargo registry and target
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-
+
+      - name: Install Rust toolchain and components
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          profile: minimal
+          components: rustfmt, clippy
+          override: true
+
+      - name: Show rustc/cargo version
+        run: |
+          rustc --version
+          cargo --version
+
+      - name: Build (release)
+        run: cargo build --release
+
+      - name: Run tests
+        run: cargo test --all --locked
+
+      - name: Check formatting
+        run: cargo fmt --all -- --check
+
+      - name: Run clippy (deny warnings)
+        run: cargo clippy --all-targets --all-features -- -D warnings
+
+      - name: Build documentation
+        run: cargo doc --no-deps
+
+      - name: Cargo publish (dry-run)
+        run: cargo publish --dry-run
+
+  embedded-build:
+    needs: verify
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        target: ["thumbv6m-none-eabi", "thumbv8m.main-none-eabihf", "riscv32imc-unknown-none-elf"]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain (with rust-src)
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          profile: minimal
+          components: rust-src
+          override: true
+
+      - name: Add target
+        run: rustup target add ${{ matrix.target }}
+
+      - name: Install target-specific toolchain
+        run: |
+          set -eux
+          if [[ "${{ matrix.target }}" == thumb* ]]; then
+            echo "Installing ARM cross toolchain (gcc-arm-none-eabi)"
+            sudo apt-get update
+            sudo apt-get install -y gcc-arm-none-eabi binutils-arm-none-eabi || true
+          elif [[ "${{ matrix.target }}" == "riscv32imc-unknown-none-elf" ]]; then
+            echo "Attempting to install RISC-V cross toolchain (may not be available in apt)."
+            sudo apt-get update
+            # Try to install a prebuilt riscv toolchain package; best-effort only.
+            sudo apt-get install -y gcc-riscv64-unknown-elf || true
+            # If the package above is unavailable, CI will continue but the riscv build
+            # may still fail; consider adding a container or prebuilt toolchain if needed.
+          else
+            echo "No additional toolchain required for target ${matrix.target}"
+          fi
+
+
+      - name: Build for target
+        run: cargo build --release --target ${{ matrix.target }}
