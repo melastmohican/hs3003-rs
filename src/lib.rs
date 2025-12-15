@@ -116,7 +116,7 @@ where
     /// # use embedded_hal_mock::eh1::delay::NoopDelay;
     /// # use hs3003::Hs3003;
     /// # let expectations = [
-    /// #     I2cTransaction::write(0x44, vec![]),
+    /// #     I2cTransaction::write(0x44, vec![0x00]),
     /// #     I2cTransaction::read(0x44, vec![0x1F, 0xFF, 0x66, 0x64]),
     /// # ];
     /// # let i2c = I2cMock::new(&expectations);
@@ -133,7 +133,7 @@ where
         D: DelayNs,
     {
         // Trigger measurement by writing to the sensor
-        self.i2c.write(self.address, &[])?;
+        self.i2c.write(self.address, &[0x00])?;
 
         // Wait for measurement to complete
         delay.delay_us(MEASUREMENT_TIME_US);

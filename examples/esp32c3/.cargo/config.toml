@@ -1,0 +1,18 @@
+
+[target.riscv32imc-unknown-none-elf]
+runner = "probe-rs run --chip=esp32c3 --preverify --always-print-stacktrace --no-location --catch-hardfault"
+
+[env]
+DEFMT_LOG="info"
+
+[build]
+rustflags = [
+  "-C", "force-frame-pointers",
+  "-C", "link-arg=-Tdefmt.x",
+]
+
+target = "riscv32imc-unknown-none-elf"
+
+[unstable]
+build-std = ["core"]
+

@@ -1,0 +1,31 @@
+
+[package]
+name = "hs3003-pico2-app"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+hs3003 = { path = "../.." }
+embedded-hal = "1.0.0"
+rp235x-hal = { version = "0.3.0", features = [
+    "binary-info",
+    "critical-section-impl",
+    "rt",
+    "defmt",
+] }
+panic-probe = { version = "1.0.0", features = ["print-defmt"] }
+defmt = "1.0.1"
+defmt-rtt = "1.1.0"
+
+[profile.dev]
+opt-level = "s"
+
+[profile.release]
+codegen-units = 1
+debug = 2
+debug-assertions = false
+incremental = false
+lto = 'fat'
+opt-level = 's'
+overflow-checks = false
+
