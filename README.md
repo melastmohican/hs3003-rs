@@ -4,7 +4,7 @@ Platform-agnostic Rust driver for the Renesas HS3003 temperature and humidity se
 
 [![crates.io](https://img.shields.io/crates/v/hs3003.svg)](https://crates.io/crates/hs3003)
 [![Docs](https://docs.rs/hs3003/badge.svg)](https://docs.rs/hs3003)
-[![Build Status](https://github.com/yourusername/hs3003/workflows/CI/badge.svg)](https://github.com/yourusername/hs3003/actions)
+[![Verify publish readiness](https://github.com/melastmohican/hs3003-rs/actions/workflows/verify-publish.yml/badge.svg)](https://github.com/melastmohican/hs3003-rs/actions/workflows/verify-publish.yml)
 
 ## Features
 
@@ -24,6 +24,27 @@ Add this to your `Cargo.toml`:
 hs3003 = "0.1"
 ```
 
+**CI / Verify publish readiness**
+
+The repository includes a GitHub Actions workflow `verify-publish.yml` that runs the checks used before publishing to crates.io: build, tests, formatting check, clippy (deny warnings), documentation build, and a `cargo publish --dry-run`. The workflow also attempts cross-target builds for common embedded targets (`thumbv6m-none-eabi`, `thumbv8m.main-none-eabihf`, and `riscv32imc-unknown-none-elf`).
+
+- **Badge:** The badge near the top links to the workflow runs and shows the latest status.
+- **Interpreting failures:**
+	- If the `verify` job fails, the failure is likely in unit tests, formatting, clippy lints, or doc generation — inspect the job logs for the failing step.
+	- If the `embedded-build` matrix job fails for a specific target, the logs will show whether the failure is due to missing toolchain (linker) or a build error in the example code. The CI installs `gcc-arm-none-eabi` for ARM targets; RISC-V toolchain installation is attempted but may require a prebuilt toolchain or container on CI runners.
+	- For persistent cross-toolchain failures, consider adding a prebuilt toolchain container or customizing the workflow to install the exact toolchain used locally.
+
+You can run the same checks locally before pushing:
+
+```bash
+cargo build --release
+cargo test --all --locked
+cargo fmt --all -- --check
+cargo clippy --all-targets --all-features -- -D warnings
+cargo doc --no-deps
+cargo publish --dry-run
+```
+
 ### Example
 
 ```rust
@@ -32,7 +53,7 @@ hs3003 = "0.1"
 use hs3003::Hs3003;
 
 # let expectations = [
-#     I2cTransaction::write(0x44, vec![]),
+#     I2cTransaction::write(0x44, vec![0x00]),
 #     I2cTransaction::read(0x44, vec![0x1F, 0xFF, 0x66, 0x64]),
 # ];
 # let i2c = I2cMock::new(&expectations);
@@ -56,66 +77,44 @@ println!("Humidity: {:.2}%", measurement.humidity);
 
 #### Raspberry Pi Pico (RP2350/RP2040)
 
-```rust,ignore
-use embedded_hal::delay::DelayNs;
-use rp235x_hal as hal;
-use hs3003::Hs3003;
+A complete Raspberry Pi Pico 2 (RP2350) example is available at `examples/rp235x/`.
 
-// Set up I2C
-let mut i2c = hal::I2C::i2c0(
-    peripherals.I2C0,
-    sda_pin,
-    scl_pin,
-    100.kHz(),
-    &mut resets,
-    system_clock.freq(),
-);
+- Build the example for the RP2350 (Cortex-M33) target:
 
-let mut sensor = Hs3003::new(i2c);
-let mut delay = cortex_m::delay::Delay::new(core.SYST, system_clock.freq().to_Hz());
-
-loop {
-    match sensor.read(&mut delay) {
-        Ok(measurement) => {
-            // Use measurement data
-        }
-        Err(e) => {
-            // Handle error
-        }
-    }
-    delay.delay_ms(2000);
-}
+```bash
+cd examples/rp235x
+cargo build --target thumbv8m.main-none-eabihf
 ```
+
+- Run or flash the example using the runner configured in `examples/rp235x/.cargo/config.toml` (for example `probe-rs`):
+
+```bash
+cd examples/rp235x
+cargo run --target thumbv8m.main-none-eabihf
+```
+
+See `examples/rp235x/.cargo/config.toml` and `examples/rp235x/build.rs` for per-example target configuration and linker scripts.
 
 #### ESP32-C3
 
-```rust,ignore
-use esp_hal::{i2c::I2C, delay::Delay};
-use hs3003::Hs3003;
+A complete ESP32-C3 example application is provided in the repository at `examples/esp32c3/`.
 
-let i2c = I2C::new(
-    peripherals.I2C0,
-    sda_pin,
-    scl_pin,
-    100.kHz(),
-    &clocks,
-);
+- Build the example for the ESP32-C3 (RISC‑V) target:
 
-let mut sensor = Hs3003::new(i2c);
-let mut delay = Delay::new(&clocks);
-
-loop {
-    match sensor.read(&mut delay) {
-        Ok(measurement) => {
-            // Use measurement data
-        }
-        Err(e) => {
-            // Handle error
-        }
-    }
-    delay.delay_ms(2000);
-}
+```bash
+cd examples/esp32c3
+cargo build --target riscv32imc-unknown-none-elf
 ```
+
+- Run or flash the example to hardware using the runner configured in `examples/esp32c3/.cargo/config.toml` (for example, `probe-rs`, `espflash` or `cargo run` if your runner is set up):
+
+```bash
+# from repository root or from the example directory
+cd examples/esp32c3
+cargo run --target riscv32imc-unknown-none-elf
+```
+
+See `examples/esp32c3/.cargo/config.toml` and `examples/esp32c3/rust-toolchain.toml` for per-example target and runner configuration.
 
 ## Sensor Information
 
