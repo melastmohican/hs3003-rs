@@ -1,0 +1,37 @@
+[workspace]
+# Create a GitHub release when publishing
+release = true
+
+# Generate changelog from conventional commits
+changelog_update = true
+
+# Include commit body in changelog
+changelog_include_commit_body = false
+
+[changelog]
+# Changelog header
+header = """# Changelog
+
+All notable changes to this project will be documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+"""
+
+# Commit types to include in changelog
+commit_parsers = [
+    { message = "^feat", group = "🚀 Features" },
+    { message = "^fix", group = "🐛 Bug Fixes" },
+    { message = "^doc", group = "📚 Documentation" },
+    { message = "^perf", group = "⚡ Performance" },
+    { message = "^refactor", group = "🔧 Refactoring" },
+    { message = "^test", group = "🧪 Testing" },
+    { message = "^chore\\(release\\)", skip = true },
+    { message = "^chore", group = "📦 Miscellaneous" },
+]
+
+# Protect against accidentally releasing with breaking changes in 0.x
+protect_breaking_commits = false
+
+
