@@ -22,6 +22,7 @@ commit_parsers = [
     { message = "^feat", group = "🚀 Features" },
     { message = "^fix", group = "🐛 Bug Fixes" },
     { message = "^doc", group = "📚 Documentation" },
+    { message = "^ci", group = "⚙️ CI" },
     { message = "^perf", group = "⚡ Performance" },
     { message = "^refactor", group = "🔧 Refactoring" },
     { message = "^test", group = "🧪 Testing" },

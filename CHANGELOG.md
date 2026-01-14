@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-01-13
+
+### 📚 Documentation
+
+- Consolidated CI/CD documentation and improved README structure
+
+### ⚙️ CI
+
+- Fixed incorrect GitHub Action names and modernized workflows
+- Set up `docs.rs` metadata for better build reliability
+- Configured conditional release triggering using `[release]` tag
+
 ## [0.1.0] - Initial release
 
 ### Features
@@ -16,5 +28,3 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Support for custom I2C addresses
 - Temperature range: -40°C to +125°C
 - Humidity range: 0% to 100% RH
-
-
