@@ -5,8 +5,6 @@ release = true
 # Generate changelog from conventional commits
 changelog_update = true
 
-# Include commit body in changelog
-changelog_include_commit_body = false
 
 [changelog]
 # Changelog header
@@ -33,5 +31,3 @@ commit_parsers = [
 
 # Protect against accidentally releasing with breaking changes in 0.x
 protect_breaking_commits = false
-
-
