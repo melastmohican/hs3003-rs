@@ -15,15 +15,6 @@ Platform-agnostic Rust driver for the Renesas HS3003 temperature and humidity se
 - Supports humidity range: 0% to 100% RH
 - I2C interface
 
-## Usage
-
-Add this to your `Cargo.toml`:
-
-```toml
-[dependencies]
-hs3003 = "0.1"
-```
-
 ### Example
 
 ```rust
