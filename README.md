@@ -24,27 +24,6 @@ Add this to your `Cargo.toml`:
 hs3003 = "0.1"
 ```
 
-**CI / Verify publish readiness**
-
-The repository includes a GitHub Actions workflow `verify-publish.yml` that runs the checks used before publishing to crates.io: build, tests, formatting check, clippy (deny warnings), documentation build, and a `cargo publish --dry-run`. The workflow also attempts cross-target builds for common embedded targets (`thumbv6m-none-eabi`, `thumbv8m.main-none-eabihf`, and `riscv32imc-unknown-none-elf`).
-
-- **Badge:** The badge near the top links to the workflow runs and shows the latest status.
-- **Interpreting failures:**
-	- If the `verify` job fails, the failure is likely in unit tests, formatting, clippy lints, or doc generation — inspect the job logs for the failing step.
-	- If the `embedded-build` matrix job fails for a specific target, the logs will show whether the failure is due to missing toolchain (linker) or a build error in the example code. The CI installs `gcc-arm-none-eabi` for ARM targets; RISC-V toolchain installation is attempted but may require a prebuilt toolchain or container on CI runners.
-	- For persistent cross-toolchain failures, consider adding a prebuilt toolchain container or customizing the workflow to install the exact toolchain used locally.
-
-You can run the same checks locally before pushing:
-
-```bash
-cargo build --release
-cargo test --all --locked
-cargo fmt --all -- --check
-cargo clippy --all-targets --all-features -- -D warnings
-cargo doc --no-deps
-cargo publish --dry-run
-```
-
 ### Example
 
 ```rust
@@ -119,6 +98,7 @@ See `examples/esp32c3/.cargo/config.toml` and `examples/esp32c3/rust-toolchain.t
 ## Sensor Information
 
 The HS3003 is a digital temperature and humidity sensor with:
+
 - High accuracy: ±2% RH, ±0.2°C
 - Low power consumption
 - I2C interface (fixed address 0x44)
