@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.1](https://github.com/melastmohican/hs3003-rs/compare/v0.1.0...v0.1.1) - 2026-01-14
+
+### Ci
+
+- make release-plz conditional on [release] and consolidate CI docs
+- add docs.rs metadata and GitHub Pages workflow
+
+### 📚 Documentation
+
+- remove redundant CI section from README
+
 ## [0.1.0] - Initial release
 
 ### Features
