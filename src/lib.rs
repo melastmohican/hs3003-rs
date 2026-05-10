@@ -285,8 +285,8 @@ mod tests {
 
     #[test]
     fn test_read_sync() {
-        use embedded_hal_mock::eh1::i2c::{Mock as I2cMock, Transaction as I2cTransaction};
         use embedded_hal_mock::eh1::delay::NoopDelay;
+        use embedded_hal_mock::eh1::i2c::{Mock as I2cMock, Transaction as I2cTransaction};
 
         let expectations = [
             I2cTransaction::write(HS3003_I2C_ADDRESS, std::vec![0x00]),
@@ -307,8 +307,8 @@ mod tests {
     #[cfg(feature = "async")]
     #[test]
     fn test_read_async() {
-        use embedded_hal_mock::eh1::i2c::{Mock as I2cMock, Transaction as I2cTransaction};
         use embedded_hal_mock::eh1::delay::NoopDelay;
+        use embedded_hal_mock::eh1::i2c::{Mock as I2cMock, Transaction as I2cTransaction};
         use futures::executor::block_on;
 
         let expectations = [
