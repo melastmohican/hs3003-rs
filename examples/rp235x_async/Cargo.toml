@@ -1,0 +1,31 @@
+[package]
+name = "hs3003-pico2-embassy-app"
+version = "0.2.0"
+edition = "2021"
+
+[dependencies]
+hs3003 = { path = "../..", features = ["async"] }
+
+embassy-executor = { version = "0.7.0", features = ["task-arena-size-32768", "arch-cortex-m", "executor-thread", "executor-interrupt", "defmt"] }
+embassy-time = { version = "0.4.0", features = ["defmt", "defmt-timestamp-uptime"] }
+embassy-rp = { version = "0.3.1", features = ["defmt", "unstable-pac", "time-driver", "critical-section-impl", "rp235xa", "binary-info"] }
+rp235x-hal = { version = "0.3.0", features = ["binary-info", "rt"] }
+
+defmt = "1.0.1"
+defmt-rtt = "1.1.0"
+panic-probe = { version = "1.0.0", features = ["print-defmt"] }
+static_cell = "2.1.0"
+cortex-m = "0.7.7"
+cortex-m-rt = "0.7.5"
+
+[profile.dev]
+opt-level = "s"
+
+[profile.release]
+codegen-units = 1
+debug = 2
+debug-assertions = false
+incremental = false
+lto = 'fat'
+opt-level = 's'
+overflow-checks = false

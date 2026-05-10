@@ -14,6 +14,7 @@ Platform-agnostic Rust driver for the Renesas HS3003 temperature and humidity se
 - Supports temperature range: -40°C to +125°C
 - Supports humidity range: 0% to 100% RH
 - I2C interface
+- **Async support** via `embedded-hal-async` (optional feature)
 
 ### Example
 
@@ -43,6 +44,26 @@ println!("Humidity: {:.2}%", measurement.humidity);
 # Ok::<(), hs3003::Error<embedded_hal::i2c::ErrorKind>>(())
 ```
 
+### Async Example (Embassy)
+
+Enable the `async` feature in your `Cargo.toml`:
+
+```toml
+hs3003 = { version = "0.2.0", features = ["async"] }
+```
+
+Then use `read_async`:
+
+```rust,ignore
+use hs3003::Hs3003;
+
+// Create sensor instance with Async I2C interface
+let mut sensor = Hs3003::new(i2c);
+
+// Read temperature and humidity asynchronously
+let measurement = sensor.read_async(&mut delay).await?;
+```
+
 ### Platform-Specific Examples
 
 #### Raspberry Pi Pico (RP2350/RP2040)
@@ -64,6 +85,8 @@ cargo run --target thumbv8m.main-none-eabihf
 ```
 
 See `examples/rp235x/.cargo/config.toml` and `examples/rp235x/build.rs` for per-example target configuration and linker scripts.
+
+An **Embassy-based async example** for RP2350 is available at `examples/rp235x_async/`.
 
 #### ESP32-C3
 

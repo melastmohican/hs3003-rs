@@ -12,6 +12,11 @@
 use embedded_hal::delay::DelayNs;
 use embedded_hal::i2c::I2c;
 
+#[cfg(feature = "async")]
+use embedded_hal_async::delay::DelayNs as AsyncDelayNs;
+#[cfg(feature = "async")]
+use embedded_hal_async::i2c::I2c as AsyncI2c;
+
 /// Default I2C address of the HS3003 sensor
 pub const HS3003_I2C_ADDRESS: u8 = 0x44;
 
@@ -165,6 +170,46 @@ where
     }
 }
 
+#[cfg(feature = "async")]
+impl<I2C, E> Hs3003<I2C>
+where
+    I2C: AsyncI2c<Error = E>,
+{
+    /// Triggers a measurement and reads temperature and humidity asynchronously
+    ///
+    /// This function:
+    /// 1. Sends a measurement request to the sensor
+    /// 2. Waits for the measurement to complete (100ms)
+    /// 3. Reads the raw data from the sensor
+    /// 4. Converts the raw data to temperature and humidity values
+    ///
+    /// # Arguments
+    ///
+    /// * `delay` - A delay provider implementing `embedded_hal_async::delay::DelayNs`
+    ///
+    /// # Returns
+    ///
+    /// A `Result` containing a `Measurement` with temperature and humidity values,
+    /// or an `Error` if the operation fails.
+    pub async fn read_async<D>(&mut self, delay: &mut D) -> Result<Measurement, Error<E>>
+    where
+        D: AsyncDelayNs,
+    {
+        // Trigger measurement by writing to the sensor
+        self.i2c.write(self.address, &[0x00]).await?;
+
+        // Wait for measurement to complete
+        delay.delay_us(MEASUREMENT_TIME_US).await;
+
+        // Read 4 bytes of data
+        let mut buffer = [0u8; 4];
+        self.i2c.read(self.address, &mut buffer).await?;
+
+        // Parse the measurement
+        Ok(Self::parse_measurement(&buffer))
+    }
+}
+
 // Separate impl block without trait bounds for parsing (allows testing)
 impl<I2C> Hs3003<I2C> {
     /// Parses raw sensor data into a Measurement
@@ -193,6 +238,7 @@ impl<I2C> Hs3003<I2C> {
 
 #[cfg(test)]
 mod tests {
+    extern crate std;
     use super::*;
 
     #[test]
@@ -235,5 +281,49 @@ mod tests {
     #[test]
     fn test_default_address() {
         assert_eq!(HS3003_I2C_ADDRESS, 0x44);
+    }
+
+    #[test]
+    fn test_read_sync() {
+        use embedded_hal_mock::eh1::i2c::{Mock as I2cMock, Transaction as I2cTransaction};
+        use embedded_hal_mock::eh1::delay::NoopDelay;
+
+        let expectations = [
+            I2cTransaction::write(HS3003_I2C_ADDRESS, std::vec![0x00]),
+            I2cTransaction::read(HS3003_I2C_ADDRESS, std::vec![0x1F, 0xFF, 0x66, 0x64]),
+        ];
+        let i2c = I2cMock::new(&expectations);
+        let mut delay = NoopDelay::new();
+        let mut sensor = Hs3003::new(i2c);
+
+        let measurement = sensor.read(&mut delay).unwrap();
+        assert!((measurement.humidity - 50.0).abs() < 0.1);
+        assert!((measurement.temperature - 26.0).abs() < 0.5);
+
+        let mut i2c = sensor.destroy();
+        i2c.done();
+    }
+
+    #[cfg(feature = "async")]
+    #[test]
+    fn test_read_async() {
+        use embedded_hal_mock::eh1::i2c::{Mock as I2cMock, Transaction as I2cTransaction};
+        use embedded_hal_mock::eh1::delay::NoopDelay;
+        use futures::executor::block_on;
+
+        let expectations = [
+            I2cTransaction::write(HS3003_I2C_ADDRESS, std::vec![0x00]),
+            I2cTransaction::read(HS3003_I2C_ADDRESS, std::vec![0x1F, 0xFF, 0x66, 0x64]),
+        ];
+        let i2c = I2cMock::new(&expectations);
+        let mut delay = NoopDelay::new();
+        let mut sensor = Hs3003::new(i2c);
+
+        let measurement = block_on(sensor.read_async(&mut delay)).unwrap();
+        assert!((measurement.humidity - 50.0).abs() < 0.1);
+        assert!((measurement.temperature - 26.0).abs() < 0.5);
+
+        let mut i2c = sensor.destroy();
+        i2c.done();
     }
 }
